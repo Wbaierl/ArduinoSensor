@@ -16,6 +16,8 @@
 // Original library: https://www.github.com/lowpowerlab/rfm69
 // SparkFun repository: https://github.com/sparkfun/RFM69HCW_Breakout
 
+// Extension with reading Temp. Sensor at Arduino
+
 // Include the RFM69 and SPI libraries:
 #include <RFM69.h>
 #include <RFM69_ATC.h>
