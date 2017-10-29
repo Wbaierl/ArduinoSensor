@@ -12,5 +12,7 @@
  RSSI drop by approx. -20dB when increasing to 4800 baud
 
 
-######## Branch RFMATC_Sensor
- Extend function of RFM69ATC_node1 with reading temperature sensor 
+######## Branch RFM_Sensor
+ Build a sensor that transmits sensor data over RFM69 868MHz
+ 
+ 
