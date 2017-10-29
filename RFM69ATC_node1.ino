@@ -1,3 +1,5 @@
+
+
 // RFM69HCW Example Sketch
 // Send serial input characters from one RFM69 node to another
 // Based on RFM69 library sample code by Felix Rusu
@@ -16,7 +18,7 @@
 // Original library: https://www.github.com/lowpowerlab/rfm69
 // SparkFun repository: https://github.com/sparkfun/RFM69HCW_Breakout
 
-// Extension with reading Temp. Sensor 18B20 
+#include <Adafruit_Sensor.h>
 
 // Include the RFM69 and SPI libraries:
 #include <RFM69.h>
@@ -26,6 +28,13 @@
 // Include libraries to read Temp. Sensor
 #include <OneWire.h>
 #include <DallasTemperature.h>
+
+// Include Library to read DHT
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define DHTPIN 4 //Der Sensor wird an PIN 4 angeschlossen    
+#define DHTTYPE DHT22    // Es handelt sich um den DHT22 Sensor
 
 // Addresses for this node. CHANGE THESE FOR EACH NODE!
 
@@ -73,6 +82,8 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 /********************************************************************/
 
+DHT dht(DHTPIN, DHTTYPE); //Der Sensor wird ab jetzt mit „dth“ angesprochen
+
 void setup()
 {
   // Open a serial port so we can send keystrokes to the module:
@@ -111,6 +122,7 @@ void loop()
   static int sendlength = 0;
   float temp_1;
 
+  ReadHumidity();
 
   // SENDING
 
@@ -210,6 +222,9 @@ void loop()
   }
 }
 
+
+
+
 float ReadTemp()
 // Function to read temperature from 18B20 single wire temp. Sensor
 {
@@ -225,6 +240,25 @@ float ReadTemp()
    // You can have more than one DS18B20 on the same bus.
    // 0 refers to the first IC on the wire
 }
+
+
+void ReadHumidity()
+{
+  dht.begin(); //DHT22 Sensor starten
+  delay(2000);//Zwei Sekunden bis zur Messung warten damit der Sensor etwas //messen kann weil er relativ langsam ist
+  float Luftfeuchtigkeit = dht.readHumidity(); //die Luftfeuchtigkeit auslesen und unter „Luftfeutchtigkeit“ speichern
+  
+  float Temperatur = dht.readTemperature();//die Temperatur auslesen und unter „Temperatur“ speichern
+  
+  Serial.print("Luftfeuchtigkeit: "); //Im seriellen Monitor den Text und 
+  Serial.print(Luftfeuchtigkeit); //die Dazugehörigen Werte anzeigen
+  Serial.println(" %");
+  Serial.print("Temperatur: ");
+  Serial.print(Temperatur);
+  Serial.println(" Grad Celsius");
+}
+
+
 
 void Blink(byte PIN, int DELAY_MS)
 // Blink an LED for a given number of ms
