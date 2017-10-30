@@ -1,3 +1,5 @@
+
+
 // RFM69HCW Example Sketch
 // Send serial input characters from one RFM69 node to another
 // Based on RFM69 library sample code by Felix Rusu
@@ -16,12 +18,23 @@
 // Original library: https://www.github.com/lowpowerlab/rfm69
 // SparkFun repository: https://github.com/sparkfun/RFM69HCW_Breakout
 
-// Extension with reading Temp. Sensor at Arduino
+#include <Adafruit_Sensor.h>
 
 // Include the RFM69 and SPI libraries:
 #include <RFM69.h>
 #include <RFM69_ATC.h>
 #include <SPI.h>
+
+// Include libraries to read Temp. Sensor
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// Include Library to read DHT
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define DHTPIN 4 //Der Sensor wird an PIN 4 angeschlossen    
+#define DHTTYPE DHT22    // Es handelt sich um den DHT22 Sensor
 
 // Addresses for this node. CHANGE THESE FOR EACH NODE!
 
@@ -57,6 +70,20 @@
 
 RFM69_ATC radio;
 
+/********************************************************************/
+// Data wire is plugged into pin Digital D3 on the Arduino
+#define ONE_WIRE_BUS 3
+/********************************************************************/
+// Setup a oneWire instance to communicate with any OneWire devices
+// (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+/********************************************************************/
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature sensors(&oneWire);
+/********************************************************************/
+
+DHT dht(DHTPIN, DHTTYPE); //Der Sensor wird ab jetzt mit „dth“ angesprochen
+
 void setup()
 {
   // Open a serial port so we can send keystrokes to the module:
@@ -66,12 +93,15 @@ void setup()
   Serial.print(MYNODEID,DEC);
   Serial.println(" ready");
 
+ // Start up the DallasTemperature library
+ sensors.begin();
+
   // Set up the indicator LED (optional):
 
-  pinMode(LED,OUTPUT);
-  digitalWrite(LED,LOW);
-  pinMode(GND,OUTPUT);
-  digitalWrite(GND,LOW);
+//  pinMode(LED,OUTPUT);
+//  digitalWrite(LED,LOW);
+//  pinMode(GND,OUTPUT);
+//  digitalWrite(GND,LOW);
 
   // Initialize the RFM69HCW:
 
@@ -90,13 +120,22 @@ void loop()
 
   static char sendbuffer[62];
   static int sendlength = 0;
+  float temp_1;
+
+  ReadHumidity();
 
   // SENDING
 
   // In this section, we'll gather serial characters and
   // send them to the other node if we (1) get a carriage return,
   // or (2) the buffer is full (61 characters).
-
+  
+  // Read temperature from D18B20 Sensor
+  //temp_1 = ReadTemp();
+  //Serial.print("Temperature: ");
+  //Serial.println(temp_1);
+  //delay(2000);
+  
   // If there is any serial input, add it to the buffer:
 
   if (Serial.available() > 0)
@@ -142,7 +181,7 @@ void loop()
       }
 
       sendlength = 0; // reset the packet
-      Blink(LED,10);
+//      Blink(LED,10);
     }
   }
 
@@ -179,9 +218,47 @@ void loop()
       radio.sendACK();
       Serial.println("ACK sent");
     //}
-    Blink(LED,10);
+//    Blink(LED,10);
   }
 }
+
+
+
+
+float ReadTemp()
+// Function to read temperature from 18B20 single wire temp. Sensor
+{
+ // call sensors.requestTemperatures() to issue a global temperature
+ // request to all devices on the bus
+/********************************************************************/
+// Serial.print(" Requesting temperatures...");
+ sensors.requestTemperatures(); // Send the command to get temperature readings
+// Serial.println("DONE");
+/********************************************************************/
+//Serial.print("Temperature is: ");
+ return (sensors.getTempCByIndex(0)); // Why "byIndex"?
+   // You can have more than one DS18B20 on the same bus.
+   // 0 refers to the first IC on the wire
+}
+
+
+void ReadHumidity()
+{
+  dht.begin(); //DHT22 Sensor starten
+  delay(2000);//Zwei Sekunden bis zur Messung warten damit der Sensor etwas //messen kann weil er relativ langsam ist
+  float Luftfeuchtigkeit = dht.readHumidity(); //die Luftfeuchtigkeit auslesen und unter „Luftfeutchtigkeit“ speichern
+  
+  float Temperatur = dht.readTemperature();//die Temperatur auslesen und unter „Temperatur“ speichern
+  
+  Serial.print("Luftfeuchtigkeit: "); //Im seriellen Monitor den Text und 
+  Serial.print(Luftfeuchtigkeit); //die Dazugehörigen Werte anzeigen
+  Serial.println(" %");
+  Serial.print("Temperatur: ");
+  Serial.print(Temperatur);
+  Serial.println(" Grad Celsius");
+}
+
+
 
 void Blink(byte PIN, int DELAY_MS)
 // Blink an LED for a given number of ms
